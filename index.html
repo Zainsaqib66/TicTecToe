@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Raleway', sans-serif;
+            background: linear-gradient(135deg, #ffafbd, #ffc3a0, #ffafbd, #ffc3a0);
+            background-size: 400% 400%;
+            animation: gradientBackground 15s ease infinite;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            cursor: url('https://img.icons8.com/ios-filled/50/000000/tic-tac-toe.png'), auto;
+        }
+
+        @keyframes gradientBackground {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .loading-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .loading-screen h2 {
+            font-size: 36px;
+            animation: bounce 1.5s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .game-container {
+            display: none;
+            text-align: center;
+            position: relative;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 20px;
+            box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .board {
+            display: none;
+            grid-gap: 15px;
+            margin: 20px auto;
+            justify-content: center;
+        }
+
+        .cell {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            font-size: 36px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .cell:hover {
+            background: rgba(255, 224, 224, 0.8);
+            transform: scale(1.05);
+            box-shadow: 0px 4px 15px rgba(255, 128, 128, 0.3);
+        }
+
+        .dot {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .player-dot {
+            background-color: green;
+        }
+
+        .computer-dot {
+            background-color: red;
+        }
+
+        header {
+            margin-bottom: 10px;
+            animation: pulseTitle 2s infinite alternate;
+        }
+
+        @keyframes pulseTitle {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(1.05);
+            }
+        }
+
+        .btn {
+            margin: 5px;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 50%;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: scale(1.2);
+            box-shadow: 0px 4px 15px rgba(255, 128, 128, 0.4);
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            transition: filter 0.2s;
+        }
+
+        .icon:hover {
+            filter: drop-shadow(0 0 5px #ff7e5f);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .notification {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff7e5f;
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            display: none;
+        }
+
+        .leave-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 24px;
+        }
+
+        #start-game-button {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 30px;
+            background: rgba(255, 224, 224, 0.8);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #fff;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        #start-game-button:hover {
+            background: rgba(255, 128, 128, 0.9);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <h2>Loading Tic Tac Toe...</h2>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container" id="game-container">
+        <header>
+            <h1>Tic Tac Toe</h1>
+            <button class="btn" id="reset"><img src="https://img.icons8.com/ios-filled/50/000000/restart.png" alt="Reset" class="icon"></button>
+            <button class="btn" id="emoji-button"><img src="https://img.icons8.com/ios-filled/50/000000/happy.png" alt="Emoji Selection" class="icon"></button>
+            <button class="btn" id="settings-button"><img src="https://img.icons8.com/ios-filled/50/000000/settings.png" alt="Settings" class="icon"></button>
+            <button class="btn" id="difficulty-button"><img src="https://img.icons8.com/ios-filled/50/000000/robot.png" alt="Difficulty" class="icon"></button>
+            <button class="btn" id="tutorial-button"><img src="https://img.icons8.com/ios-filled/50/000000/teaching.png" alt="Tutorial" class="icon"></button>
+            <button class="btn" id="game-start-button"><img src="https://img.icons8.com/ios-filled/50/000000/play.png" alt="Start Game" class="icon"></button>
+            <button class="btn" id="two-player-button"><img src="https://img.icons8.com/ios-filled/50/000000/user-group-man-man.png" alt="Two Players" class="icon"></button>
+            <button class="btn" id="hint-button" style="display: none;"><img src="https://img.icons8.com/ios-filled/50/000000/idea.png" alt="Hint" class="icon"></button>
+            <button class="btn" id="leave-button" style="display: none;"><img src="https://img.icons8.com/ios-filled/50/000000/exit.png" alt="Leave" class="icon"></button>
+        </header>
+        <div class="board" id="board"></div>
+
+        <!-- Modals -->
+        <div id="settings" class="modal">
+            <h2>Settings</h2>
+            <label>Select Board Size: 
+                <button onclick="setBoardSize(3)">3x3</button>
+                <button onclick="setBoardSize(4)">4x4</button>
+                <button onclick="setBoardSize(5)">5x5</button>
+            </label>
+            <br>
+            <label>Sound: 
+                <input type="checkbox" id="sound-toggle" checked>
+            </label>
+            <button onclick="closeSettings()">Close</button>
+        </div>
+
+        <div id="difficulty" class="modal">
+            <h2>Select Difficulty</h2>
+            <button onclick="setDifficulty('easy')">Easy</button>
+            <button onclick="setDifficulty('normal')">Normal</button>
+            <button onclick="setDifficulty('hard')">Hard</button>
+            <button onclick="closeDifficulty()">Close</button>
+        </div>
+
+        <div id="emoji-selection" class="modal">
+            <h2>Select Your Design</h2>
+            <button onclick="selectEmoji('❌')">❌</button>
+            <button onclick="selectEmoji('🙂')">🙂</button>
+            <button onclick="selectEmoji('😎')">😎</button>
+            <button onclick="selectEmoji('👻')">👻</button>
+            <button onclick="selectEmoji('🤡')">🤡</button>
+            <button onclick="selectEmoji('🦄')">🦄</button>
+            <button onclick="closeEmojiSelection()">Close</button>
+        </div>
+
+        <div id="leave-tutorial-modal" class="modal">
+            <h2>Leave Tutorial?</h2>
+            <button onclick="stopTutorial()">Yes</button>
+            <button onclick="closeLeaveTutorial()">No</button>
+        </div>
+
+        <div class="notification" id="notification">Notification Message</div>
+    </div>
+
+    <!-- Main Start Game Button -->
+    <button id="start-game-button">Start Game</button>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const resetButton = document.getElementById('reset');
+        const emojiButton = document.getElementById('emoji-button');
+        const settingsButton = document.getElementById('settings-button');
+        const difficultyButton = document.getElementById('difficulty-button');
+        const tutorialButton = document.getElementById('tutorial-button');
+        const settingsModal = document.getElementById('settings');
+        const difficultyModal = document.getElementById('difficulty');
+        const emojiSelectionModal = document.getElementById('emoji-selection');
+        const loadingScreen = document.getElementById('loading-screen');
+        const leaveTutorialModal = document.getElementById('leave-tutorial-modal');
+        const notification = document.getElementById('notification');
+        const leaveButton = document.getElementById('leave-button');
+        const hintButton = document.getElementById('hint-button');
+        const gameContainer = document.getElementById('game-container');
+        const startGameButton = document.getElementById('start-game-button');
+        const gameStartButton = document.getElementById('game-start-button');
+        const twoPlayerButton = document.getElementById('two-player-button');
+
+        let boardSize = 3;
+        let boardState = [];
+        let currentPlayer = 'Player';
+        let playerEmoji = '❌';
+        let normalComputerEmoji = '🙂';
+        let hardComputerEmoji = '😎';
+        let difficulty = 'easy';
+        let isTutorial = false;
+        let isTwoPlayerMode = false;
+        let hintUsed = false;
+        let tutorialInterval;
+
+        function initBoard() {
+            boardElement.innerHTML = '';
+            boardElement.style.gridTemplateColumns = `repeat(${boardSize}, 70px)`;
+            boardState = Array(boardSize * boardSize).fill('');
+            boardState.forEach((_, index) => {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.index = index;
+                if (!isTutorial && !isTwoPlayerMode) {
+                    cell.addEventListener('click', () => handleCellClick(index));
+                } else if (isTwoPlayerMode) {
+                    cell.addEventListener('click', () => handleTwoPlayerClick(index));
+                }
+                boardElement.appendChild(cell);
+            });
+        }
+
+        function handleCellClick(index) {
+            if (!boardState[index] && currentPlayer === 'Player') {
+                boardState[index] = playerEmoji;
+                renderBoard();
+                if (checkWin(playerEmoji)) {
+                    showNotification('You Win!');
+                    setTimeout(resetGame, 2000);
+                } else if (boardState.every(cell => cell)) {
+                    showNotification("It's a Tie!");
+                    setTimeout(resetGame, 2000);
+                } else {
+                    currentPlayer = 'Computer';
+                    computerMove();
+                }
+            }
+        }
+
+        function handleTwoPlayerClick(index) {
+            if (!boardState[index]) {
+                boardState[index] = currentPlayer === 'Player 1' ? playerEmoji : hardComputerEmoji;
+                renderBoard();
+                if (checkWin(boardState[index])) {
+                    showNotification(`${currentPlayer} Wins!`);
+                    setTimeout(resetGame, 2000);
+                } else if (boardState.every(cell => cell)) {
+                    showNotification("It's a Tie!");
+                    setTimeout(resetGame, 2000);
+                } else {
+                    currentPlayer = currentPlayer === 'Player 1' ? 'Player 2' : 'Player 1';
+                }
+            }
+        }
+
+        function computerMove() {
+            let move = difficulty === 'hard' ? getPerfectMove() : getBestMove();
+            boardState[move] = difficulty === 'hard' ? hardComputerEmoji : normalComputerEmoji;
+            renderBoard();
+            if (checkWin(difficulty === 'hard' ? hardComputerEmoji : normalComputerEmoji)) {
+                showNotification(`${difficulty === 'hard' ? 'Hard' : 'Normal'} Computer Wins!`);
+                setTimeout(resetGame, 2000);
+            } else {
+                currentPlayer = 'Player';
+            }
+        }
+
+        function getPerfectMove() {
+            let bestScore = -Infinity;
+            let move;
+            let depthLimit = boardSize === 3 ? 4 : boardSize === 4 ? 3 : 2; // Adjust depth for performance
+            boardState.forEach((cell, index) => {
+                if (!cell) {
+                    boardState[index] = hardComputerEmoji;
+                    let score = minimax(boardState, 0, false, depthLimit, -Infinity, Infinity);
+                    boardState[index] = '';
+                    if (score > bestScore) {
+                        bestScore = score;
+                        move = index;
+                    }
+                }
+            });
+            return move;
+        }
+
+        function minimax(board, depth, isMaximizing, maxDepth, alpha, beta) {
+            if (checkWin(hardComputerEmoji)) return 10 - depth;
+            if (checkWin(playerEmoji)) return depth - 10;
+            if (board.every(cell => cell) || depth === maxDepth) return 0;
+
+            if (isMaximizing) {
+                let maxEval = -Infinity;
+                board.forEach((cell, index) => {
+                    if (!cell) {
+                        board[index] = hardComputerEmoji;
+                        let eval = minimax(board, depth + 1, false, maxDepth, alpha, beta);
+                        board[index] = '';
+                        maxEval = Math.max(maxEval, eval);
+                        alpha = Math.max(alpha, eval);
+                        if (beta <= alpha) return;
+                    }
+                });
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                board.forEach((cell, index) => {
+                    if (!cell) {
+                        board[index] = playerEmoji;
+                        let eval = minimax(board, depth + 1, true, maxDepth, alpha, beta);
+                        board[index] = '';
+                        minEval = Math.min(minEval, eval);
+                        beta = Math.min(beta, eval);
+                        if (beta <= alpha) return;
+                    }
+                });
+                return minEval;
+            }
+        }
+
+        function getBestMove() {
+            const emptyCells = boardState.map((val, index) => val === '' ? index : null).filter(val => val !== null);
+            return emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        }
+
+        function checkWin(player) {
+            const winPatterns = [
+                ...Array(boardSize).fill(0).map((_, row) => Array.from({ length: boardSize }, (_, col) => row * boardSize + col)),
+                ...Array(boardSize).fill(0).map((_, col) => Array.from({ length: boardSize }, (_, row) => row * boardSize + col)),
+                Array.from({ length: boardSize }, (_, i) => i * (boardSize + 1)),
+                Array.from({ length: boardSize }, (_, i) => (i + 1) * (boardSize - 1))
+            ];
+            return winPatterns.some(pattern => pattern.every(index => boardState[index] === player));
+        }
+
+        function resetGame() {
+            boardState = Array(boardSize * boardSize).fill('');
+            currentPlayer = isTwoPlayerMode ? 'Player 1' : 'Player';
+            hintUsed = false;
+            renderBoard();
+        }
+
+        function renderBoard() {
+            boardElement.querySelectorAll('.cell').forEach((cell, index) => {
+                cell.innerHTML = boardState[index] ? `<div class="dot ${boardState[index] === hardComputerEmoji ? 'player-dot' : 'computer-dot'}"></div>${boardState[index]}` : '';
+            });
+        }
+
+        function setDifficulty(level) {
+            difficulty = level;
+            closeDifficulty();
+        }
+
+        function selectEmoji(emoji) {
+            playerEmoji = emoji;
+            currentPlayer = 'Player';
+            closeEmojiSelection();
+        }
+
+        function showHint() {
+            if (!hintUsed) {
+                hintUsed = true;
+                const bestMove = getPerfectMove();
+                const hintCell = document.querySelector(`.cell[data-index='${bestMove}']`);
+                hintCell.style.boxShadow = '0px 0px 10px 3px yellow';
+                showNotification('Here is your hint!');
+                setTimeout(() => hintCell.style.boxShadow = '', 2000);
+            } else {
+                showNotification('Hint already used!');
+            }
+        }
+
+        function closeSettings() {
+            settingsModal.style.display = 'none';
+        }
+
+        function closeDifficulty() {
+            difficultyModal.style.display = 'none';
+        }
+
+        function closeEmojiSelection() {
+            emojiSelectionModal.style.display = 'none';
+        }
+
+        function closeLeaveTutorial() {
+            leaveTutorialModal.style.display = 'none';
+        }
+
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => notification.style.display = 'none', 2000);
+        }
+
+        function setBoardSize(size) {
+            boardSize = size;
+            closeSettings();
+        }
+
+        function startTutorial() {
+            isTutorial = true;
+            currentPlayer = 'Hard';
+            renderBoard();
+            tutorialLoop();
+            leaveButton.style.display = 'block';
+            hintButton.style.display = 'none'; // Hide hint during the tutorial
+        }
+
+        function tutorialLoop() {
+            tutorialInterval = setInterval(() => {
+                if (!isTutorial) return;
+                if (currentPlayer === 'Hard') {
+                    currentPlayer = 'Normal';
+                    computerMove();
+                } else {
+                    currentPlayer = 'Hard';
+                    computerMove();
+                }
+            }, 1000);
+        }
+
+        function stopTutorial() {
+            isTutorial = false;
+            clearInterval(tutorialInterval);
+            resetGame();
+            leaveButton.style.display = 'none';
+            gameContainer.style.display = 'block';
+            showButtons();
+        }
+
+        function showLoadingScreen() {
+            loadingScreen.style.display = 'flex';
+            setTimeout(() => loadingScreen.style.display = 'none', 2000);
+        }
+
+        function showButtons() {
+            document.querySelectorAll('.btn').forEach(button => button.style.display = 'inline-block');
+            hintButton.style.display = 'none';
+            leaveButton.style.display = 'none';
+        }
+
+        resetButton.addEventListener('click', resetGame);
+        hintButton.addEventListener('click', showHint);
+
+        startGameButton.addEventListener('click', () => {
+            gameContainer.style.display = 'block';
+            startGameButton.style.display = 'none';
+        });
+
+        gameStartButton.addEventListener('click', () => {
+            hideButtonsExcept(['hint-button', 'leave-button']);
+            boardElement.style.display = 'grid';
+            initBoard();
+        });
+
+        twoPlayerButton.addEventListener('click', () => {
+            hideButtonsExcept(['leave-button']);
+            isTwoPlayerMode = true;
+            currentPlayer = 'Player 1';
+            boardElement.style.display = 'grid';
+            initBoard();
+        });
+
+        emojiButton.addEventListener('click', () => emojiSelectionModal.style.display = 'block');
+        settingsButton.addEventListener('click', () => settingsModal.style.display = 'block');
+        difficultyButton.addEventListener('click', () => difficultyModal.style.display = 'block');
+        tutorialButton.addEventListener('click', startTutorial);
+        leaveButton.addEventListener('click', () => {
+            stopTutorial();
+            isTwoPlayerMode = false;
+            gameContainer.style.display = 'block';
+            boardElement.style.display = 'none';
+        });
+
+        function hideButtonsExcept(ids) {
+            document.querySelectorAll('.btn').forEach(button => {
+                button.style.display = ids.includes(button.id) ? 'inline-block' : 'none';
+            });
+        }
+
+        showLoadingScreen();
+        initBoard();
+    </script>
+</body>
+</html>
